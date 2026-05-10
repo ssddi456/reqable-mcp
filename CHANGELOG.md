@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-05-10
+
+### Fixed
+
+- Prevented Reqable Report Server `_id` reuse from overwriting prior captures after Reqable restarts. Request storage now uses a stable internal fingerprint that includes the Reqable `_id` plus request/response characteristics, so replayed identical payloads still update the same row while new requests with reused `_id` values are inserted separately.
+
 ## [0.3.1] - 2026-03-10
 
 ### Fixed

@@ -21,18 +21,23 @@ def _as_text(value: Any) -> str:
     return str(value)
 
 
-def _entry_id(entry: dict[str, Any], request_body: str, status: int | None) -> str:
-    raw = _as_text(entry.get("_id")).strip()
-    if raw:
-        return raw
+def _entry_id(
+    entry: dict[str, Any],
+    request_body: str,
+    response_body: str,
+    status: int | None,
+) -> str:
     req = entry.get("request", {}) or {}
     seed = "|".join(
         [
+            _as_text(entry.get("_id")).strip(),
             _as_text(req.get("method", "GET")),
             _as_text(req.get("url", "")),
             _as_text(entry.get("startedDateTime", "")),
+            _as_text(entry.get("time", "")),
             _as_text(status),
             hashlib.sha1(request_body.encode("utf-8", errors="ignore")).hexdigest()[:12],
+            hashlib.sha1(response_body.encode("utf-8", errors="ignore")).hexdigest()[:12],
         ]
     )
     digest = hashlib.sha1(seed.encode("utf-8", errors="ignore")).hexdigest()[:24]
@@ -361,7 +366,7 @@ def normalize_entry(
 
     has_auth = _first_header(request_headers, "Authorization") is not None
     is_https = parsed.scheme.lower() in {"https", "wss"}
-    record_id = _entry_id(entry, request_body, status)
+    record_id = _entry_id(entry, request_body, response_body, status)
 
     return {
         "id": record_id,

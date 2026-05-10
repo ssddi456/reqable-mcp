@@ -111,6 +111,62 @@ def test_ingest_and_query(tmp_path: Path) -> None:
     assert "needle-from-raw-entry" in (raw_matches[0]["raw_entry_preview"] or "")
 
 
+def test_ingest_keeps_requests_when_reqable_id_restarts(tmp_path: Path) -> None:
+    storage = RequestStorage(
+        db_path=tmp_path / "requests.db",
+        max_body_size=102400,
+        summary_body_preview_length=200,
+        key_body_preview_length=500,
+        retention_days=7,
+    )
+    first_payload = {
+        "request": {"method": "GET", "url": "https://api.example.com/run-one"},
+        "response": {"status": 200},
+        "_id": "1",
+        "startedDateTime": "2026-02-28T09:00:00.000Z",
+    }
+    restarted_payload = {
+        "request": {"method": "GET", "url": "https://api.example.com/run-two"},
+        "response": {"status": 200},
+        "_id": "1",
+        "startedDateTime": "2026-02-28T10:00:00.000Z",
+    }
+
+    first = storage.ingest_payload(first_payload, source="report_server")
+    second = storage.ingest_payload(restarted_payload, source="report_server")
+
+    assert first["inserted"] == 1
+    assert second["inserted"] == 1
+    assert second["updated"] == 0
+    summaries = storage.get_requests(limit=10, detail_level=DetailLevel.SUMMARY)
+    assert len(summaries) == 2
+    assert {item.path for item in summaries} == {"/run-one", "/run-two"}
+
+
+def test_ingest_updates_duplicate_payload_with_reqable_id(tmp_path: Path) -> None:
+    storage = RequestStorage(
+        db_path=tmp_path / "requests.db",
+        max_body_size=102400,
+        summary_body_preview_length=200,
+        key_body_preview_length=500,
+        retention_days=7,
+    )
+    payload = {
+        "request": {"method": "GET", "url": "https://api.example.com/same"},
+        "response": {"status": 200},
+        "_id": "1",
+        "startedDateTime": "2026-02-28T09:00:00.000Z",
+    }
+
+    first = storage.ingest_payload(payload, source="report_server")
+    second = storage.ingest_payload(payload, source="report_server")
+
+    assert first["inserted"] == 1
+    assert second["inserted"] == 0
+    assert second["updated"] == 1
+    assert len(storage.get_requests(limit=10, detail_level=DetailLevel.SUMMARY)) == 1
+
+
 def test_ingest_websocket_and_query_messages(tmp_path: Path) -> None:
     storage = RequestStorage(
         db_path=tmp_path / "requests.db",

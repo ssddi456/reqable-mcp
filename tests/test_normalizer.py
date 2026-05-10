@@ -22,6 +22,32 @@ def test_extract_entries_from_single_entry() -> None:
     assert len(entries) == 1
 
 
+def test_normalize_entry_does_not_use_reqable_id_as_internal_id() -> None:
+    base_entry = {
+        "_id": "1",
+        "startedDateTime": "2026-02-28T09:00:00.000Z",
+        "request": {"method": "GET", "url": "https://api.example.com/a"},
+        "response": {"status": 200},
+    }
+    same_reqable_id_next_run = {
+        **base_entry,
+        "startedDateTime": "2026-02-28T10:00:00.000Z",
+        "request": {"method": "GET", "url": "https://api.example.com/b"},
+    }
+
+    first = normalize_entry(entry=base_entry, max_body_size=1024, source="report_server")
+    second = normalize_entry(
+        entry=same_reqable_id_next_run,
+        max_body_size=1024,
+        source="report_server",
+    )
+    duplicate = normalize_entry(entry=base_entry, max_body_size=1024, source="report_server")
+
+    assert first["id"] != "1"
+    assert first["id"] != second["id"]
+    assert first["id"] == duplicate["id"]
+
+
 def test_normalize_websocket_entry_with_messages() -> None:
     entry = {
         "_resourceType": "websocket",

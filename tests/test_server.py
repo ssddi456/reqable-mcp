@@ -5,8 +5,10 @@ from pathlib import Path
 
 def _load_server_module(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("REQABLE_DB_PATH", str(tmp_path / "requests.db"))
+    import reqable_mcp.config as config_module
     import reqable_mcp.server as server_module
 
+    importlib.reload(config_module)
     return importlib.reload(server_module)
 
 
