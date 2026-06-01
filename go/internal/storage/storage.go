@@ -25,6 +25,9 @@ const (
 	DetailSummary DetailLevel = "summary"
 	DetailKey     DetailLevel = "key"
 	DetailFull    DetailLevel = "full"
+
+	// maxWSQueryLimit is the hard upper bound on WebSocket-related sub-queries.
+	maxWSQueryLimit = 5000
 )
 
 var (
@@ -1629,7 +1632,7 @@ func (s *Storage) rowToWebSocketMessage(row map[string]any) WebSocketMessage {
 
 func (s *Storage) GetWebSocketMessages(requestID string, limit int) []WebSocketMessage {
 	if limit <= 0 {
-		limit = 5000
+		limit = maxWSQueryLimit
 	}
 	if limit > 10000 {
 		limit = 10000
@@ -1708,7 +1711,7 @@ func (s *Storage) GetRequests(limit int, detailLevel string, domain, method *str
 		for _, row := range rows {
 			item := s.rowToFull(row)
 			if item.IsWebSocket {
-				item.WebSocketMessages = s.GetWebSocketMessages(item.ID, 5000)
+				item.WebSocketMessages = s.GetWebSocketMessages(item.ID, maxWSQueryLimit)
 			}
 			result = append(result, item)
 		}
@@ -1730,7 +1733,7 @@ func (s *Storage) GetRequestByID(id, detailLevel string) any {
 	default:
 		item := s.rowToFull(row)
 		if item.IsWebSocket {
-			item.WebSocketMessages = s.GetWebSocketMessages(item.ID, 5000)
+			item.WebSocketMessages = s.GetWebSocketMessages(item.ID, maxWSQueryLimit)
 		}
 		return item
 	}
@@ -1851,14 +1854,14 @@ func (s *Storage) SearchWebSocketMessages(keyword string, direction, messageType
 	needsPostFilter := normalizedDirection != nil || normalizedMessageType != nil || opcode != nil || closeCode != nil || hasJSON != nil
 	queryLimit := limit
 	if normalizedKeyword == "" {
-		queryLimit = 5000
+		queryLimit = maxWSQueryLimit
 	} else if needsPostFilter {
 		queryLimit = limit * 20
 		if queryLimit < 200 {
 			queryLimit = 200
 		}
-		if queryLimit > 5000 {
-			queryLimit = 5000
+		if queryLimit > maxWSQueryLimit {
+			queryLimit = maxWSQueryLimit
 		}
 	}
 	args = append(args, queryLimit)
@@ -1977,8 +1980,8 @@ func (s *Storage) TailWebSocketMessages(requestID string, afterSeq *int, directi
 		if queryLimit < 200 {
 			queryLimit = 200
 		}
-		if queryLimit > 5000 {
-			queryLimit = 5000
+		if queryLimit > maxWSQueryLimit {
+			queryLimit = maxWSQueryLimit
 		}
 	}
 	whereParts := []string{"request_id = ?"}
@@ -2165,8 +2168,8 @@ func (s *Storage) RepairWebSocketMessages(maxRows int, dryRun bool) map[string]a
 	if maxRows <= 0 {
 		maxRows = 2000
 	}
-	if maxRows > 5000 {
-		maxRows = 5000
+	if maxRows > maxWSQueryLimit {
+		maxRows = maxWSQueryLimit
 	}
 	updatedFields := map[string]int{"direction": 0, "timestamp": 0, "opcode": 0, "message_type": 0, "data": 0, "data_json": 0, "is_binary": 0, "encoding": 0, "body_truncated": 0}
 	rows, err := s.queryRows(`SELECT request_id, seq, direction, timestamp, opcode, message_type,

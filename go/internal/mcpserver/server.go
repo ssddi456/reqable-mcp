@@ -575,12 +575,6 @@ func (s *Server) handleAnalyzeWebSocketSession(ctx context.Context, request mcp.
 	return jsonTextResult(map[string]any{"request_id": req.ID, "url": req.URL, "host": req.Host, "path": req.Path, "status": req.Status, "timestamp": req.Timestamp, "source": req.Source, "platform": req.Platform, "websocket_message_count": req.WebSocketMessageCount, "raw_entry_present": req.RawEntry != nil, "raw_message_count": rawMessageCount, "missing_raw_message_count": max(0, len(req.WebSocketMessages)-rawMessageCount), "json_message_count": jsonMessageCount, "binary_message_count": binaryCount, "body_truncated_message_count": truncatedCount, "directions": directionCounts, "message_types": messageTypeCounts, "opcodes": opcodeCounts, "close_codes": closeCodeCounts, "top_level_keys": topLevelKeys, "semantic_markers": semanticResult, "close_events": closeEvents, "samples": sampleOut})
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
 
 func (s *Server) handleExportWebSocketRaw(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	requestID, err := request.RequireString("request_id")
