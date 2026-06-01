@@ -20,7 +20,7 @@ Docs: [English](README.md) | [中文](README_CN.md)
 - HAR file import fallback for missed sessions.
 - HTTP request query/search/domain stats/API analysis.
 - WebSocket session/message parsing for HAR entries carrying message-frame extensions.
-- Cross-platform runtime (macOS / Linux / Windows with Python 3.10+).
+- Cross-platform runtime (Go service under `go/`, plus Python 3.10+ compatibility path).
 
 ## Prerequisites
 
@@ -30,19 +30,49 @@ Docs: [English](README.md) | [中文](README_CN.md)
 
 ## Installation
 
-### Run via npx (recommended)
+### Go service
+
+Build and run the self-contained Go service from `go/`:
+
+```bash
+cd go
+go mod tidy
+go build ./cmd/reqable-mcp
+./reqable-mcp
+```
+
+This starts:
+
+- ingest HTTP server on `http://127.0.0.1:18765`
+- MCP SSE server on `http://127.0.0.1:18766/sse`
+
+### Run via npx (existing Python bridge)
 
 ```bash
 npx -y reqable-mcp@latest
 ```
 
-### Local development
+### Local Python development
 
 ```bash
 uv run reqable-mcp
 ```
 
 ## MCP Client Configuration
+
+### Go SSE service
+
+```json
+{
+  "mcpServers": {
+    "reqable": {
+      "url": "http://127.0.0.1:18766/sse"
+    }
+  }
+}
+```
+
+### Existing npx / Python flow
 
 ```json
 {
@@ -103,6 +133,8 @@ Important note: `reqable-mcp` still uses HTTP-only ingest transport (no native `
 | `REQABLE_MAX_IMPORT_FILE_SIZE` | Max HAR import file bytes | `104857600` |
 | `REQABLE_RETENTION_DAYS` | Local retention window | `7` |
 | `REQABLE_INGEST_TOKEN` | Optional local auth token | unset |
+| `REQABLE_MCP_HOST` | MCP SSE bind host | `127.0.0.1` |
+| `REQABLE_MCP_PORT` | MCP SSE bind port | `18766` |
 
 ## Privacy and Data Retention
 
