@@ -9,3 +9,4 @@ __pycache__/
 *.egg-info/
 *.tgz
 uv.lock
+go/reqable-mcp

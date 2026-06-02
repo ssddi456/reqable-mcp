@@ -130,6 +130,11 @@ def get_max_import_file_size() -> int:
     )
 
 
+def get_log_ingest() -> bool:
+    """Return True if ingest request logging is enabled via REQABLE_LOG_INGEST env var."""
+    return os.environ.get("REQABLE_LOG_INGEST", "").strip().lower() in ("1", "true", "yes")
+
+
 @dataclass
 class Config:
     data_dir: Path
@@ -143,6 +148,7 @@ class Config:
     retention_days: int
     max_import_file_size: int = DEFAULT_MAX_IMPORT_FILE_SIZE
     ws_events_path: str = DEFAULT_WS_EVENTS_PATH
+    log_ingest: bool = False
     default_list_limit: int = 20
     key_body_preview_length: int = 500
     summary_body_preview_length: int = 200
@@ -182,6 +188,7 @@ def load_config() -> Config:
         max_report_size=get_max_report_size(),
         max_import_file_size=get_max_import_file_size(),
         retention_days=get_retention_days(),
+        log_ingest=get_log_ingest(),
     )
 
 
