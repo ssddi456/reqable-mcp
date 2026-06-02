@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	DefaultIngestHost        = "127.0.0.1"
+	DefaultIngestHost        = "0.0.0.0"
 	DefaultIngestPort        = 18765
 	DefaultIngestPath        = "/report"
 	DefaultWSEventsPath      = "/ws/events"
-	DefaultMCPHost           = "127.0.0.1"
+	DefaultMCPHost           = "0.0.0.0"
 	DefaultMCPPort           = 18766
 	DefaultMaxBodySize       = 1024 * 100
 	DefaultMaxReportSize     = 10 * 1024 * 1024

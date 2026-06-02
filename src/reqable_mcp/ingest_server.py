@@ -198,6 +198,14 @@ class IngestServerManager:
 
                 manager._accepted_payloads += 1
                 manager._last_error = None
+                if manager.config.log_ingest:
+                    LOGGER.info(
+                        "ingest: route=%s platform=%s reporter=%s result=%s",
+                        route,
+                        self.headers.get("x-reqable-platform", "-"),
+                        self.headers.get("x-reporter-host", "-"),
+                        result,
+                    )
                 self._send_json(
                     200,
                     {
